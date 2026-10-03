@@ -1,19 +1,21 @@
-# 📈 Trading Tracker & Journal (Prop Firms)
+# Trading Tracker & Journal
 
-Una potente herramienta de gestin, registro y anlisis (Trading Journal) enfocada especialmente en traders que operan con **Cuentas de Fondeo (Prop Firms)** o capital propio. Lleva un registro preciso de tus mtricas, pagos y retiros.
+Plataforma de análisis de rendimiento para traders de cuentas de fondeo (Prop Firms), diseñada para registrar operaciones, calcular métricas de riesgo y visualizar curvas de capital (Equity Curves).
 
-## 🚀 Caractersticas Principales
-- **Mtricas Clave:** Calcula automticamente tu PnL Neto, ROI (Retorno de Inversin) y Funding Ratio.
-- **Gestin de Cuentas:** Diferencia entre cuentas de evaluacin (Challenges) y cuentas Live/Funded.
-- **Top Prop Firms:** Analiza automticamente qu empresas de fondeo te estn generando mayores retiros y cules tienen el mejor rendimiento en base a tu gasto.
-- **Grficos de Capital (Equity Curve):** Visualiza la evolucin de tus beneficios netos y retiros a travs del tiempo con grficos de lnea profesionales.
-- **Privacidad Local:** Como buen tracker financiero, tus datos (cuentas, precios, balances) se guardan localmente en tu navegador sin bases de datos de terceros.
+## 🏗️ Arquitectura y Funcionamiento Interno
+- **Procesamiento de Métricas:** Motor lógico en Vanilla JavaScript que calcula métricas financieras complejas en tiempo real (Net PnL, Return on Investment, y Ratios de Aprobación/Fondeo).
+- **Data Visualization:** Integración con la librería **Chart.js** montada sobre elementos <canvas> para renderizar la curva de capital dinámica interpolando progresiones algorítmicas de depósitos y retiros.
+- **Capa de Datos Relacional:** Implementa un modelo de datos simplificado en el cliente, vinculando colecciones de transacciones (	radingTrackerTransactions) con entidades de cuentas (	radingTrackerAccounts) a través de llaves primarias generadas dinámicamente. Almacenamiento seguro vía localStorage.
 
-## 🛠️ Cmo utilizarlo
-1. Descarga el repositorio o haz un clon en tu computadora.
-2. Abre el archivo `index.html` en cualquier navegador web.
-3. Aade tus cuentas (Evaluaciones/Live) y registra tus gastos (compras de cuentas/resets) as como tus retiros exitosos (payouts).
-4. Deja que el Tracker genere las estadsticas por ti.
+## 📂 Estructura del Proyecto
+`plaintext
+trading-tracker/
+├── index.html                  # Main View, Templates y Controladores JS
+├── avatar.jpg                  # Recursos de interfaz (UI Profile Component)
+├── favicon.ico                 # Iconografía de la app
+├── icono-removebg-preview.png  # Asset del logo principal (Transparente)
+└── README.md
+`
 
-## 🏷️ Etiquetas (SEO)
-`trading journal` `trading tracker` `prop firm tracker` `forex journal` `funded accounts manager` `pnl tracker`
+## ⚙️ Despliegue
+Al ser una aplicación Web puramente estática, puede ser desplegada en cualquier servidor HTTP (Nginx, Vercel, GitHub Pages) o ejecutada localmente en un sandbox de navegador estándar.
