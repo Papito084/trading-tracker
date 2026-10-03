@@ -6,4 +6,45 @@
         .filter-btn.active { background-color: #7c3aed; color: white; border-color: #7c3aed; }
         
         .modal { transition: opacity 0.25s ease; }
-        body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
+        body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }body.dark-mode {
+    background-color: #111827 !important;
+    color: #f3f4f6 !important;
+}
+body.dark-mode .bg-white {
+    background-color: #1f2937 !important;
+    border-color: #374151 !important;
+}
+body.dark-mode .text-gray-900, body.dark-mode .text-gray-800, body.dark-mode .text-gray-700 {
+    color: #f3f4f6 !important;
+}
+body.dark-mode .text-gray-600, body.dark-mode .text-gray-500 {
+    color: #9ca3af !important;
+}
+body.dark-mode .border-gray-200, body.dark-mode .border-gray-100 {
+    border-color: #374151 !important;
+}
+body.dark-mode .bg-gray-50 {
+    background-color: #374151 !important;
+}
+body.dark-mode input, body.dark-mode select, body.dark-mode textarea {
+    background-color: #374151 !important;
+    color: #f3f4f6 !important;
+    border-color: #4b5563 !important;
+}
+body.dark-mode .sidebar-link.active {
+    background-color: #374151 !important;
+    color: #a78bfa !important;
+}
+body.dark-mode .bg-gray-100 {
+    background-color: #374151 !important;
+}
+body.dark-mode .hover\:bg-gray-50:hover {
+    background-color: #4b5563 !important;
+}
+body.dark-mode th {
+    background-color: #1f2937 !important;
+    color: #e5e7eb !important;
+}
+body.dark-mode td {
+    border-color: #374151 !important;
+}

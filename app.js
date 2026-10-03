@@ -389,3 +389,37 @@
         }
 
         showSection('dashboard');
+// Dark Mode Toggle
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('tradingTrackerDarkMode', isDark);
+    
+    const btn = document.getElementById('darkModeBtn');
+    if(btn) {
+        btn.innerHTML = isDark ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+    }
+    
+    // Update Chart.js if exists
+    if (typeof Chart !== 'undefined') {
+        Chart.defaults.color = isDark ? '#9ca3af' : '#6b7280';
+        Chart.defaults.borderColor = isDark ? '#374151' : '#f3f4f6';
+        if(typeof renderChart === 'function') {
+            renderChart();
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const isDark = localStorage.getItem('tradingTrackerDarkMode') === 'true';
+    if(isDark) {
+        document.body.classList.add('dark-mode');
+        const btn = document.getElementById('darkModeBtn');
+        if(btn) btn.innerHTML = '<i class="fa-solid fa-sun"></i>';
+        
+        if (typeof Chart !== 'undefined') {
+            Chart.defaults.color = '#9ca3af';
+            Chart.defaults.borderColor = '#374151';
+        }
+    }
+});
