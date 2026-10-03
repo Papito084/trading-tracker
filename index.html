@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tracker de Fondeo</title>
+    
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fc; }
+        .sidebar-link.active { background-color: #f3f4f6; color: #7c3aed; font-weight: 600; }
+        .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); }
+        input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; filter: invert(0.5); }
+        .filter-btn.active { background-color: #7c3aed; color: white; border-color: #7c3aed; }
+        
+        .modal { transition: opacity 0.25s ease; }
+        body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
+    </style>
+</head>
+<body class="text-gray-700">
+
+    <div class="flex h-screen overflow-hidden">
+        <aside class="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col">
+            <div class="p-6 flex items-center gap-3">
+                <img src="icono-removebg-preview.png" alt="Logo" class="w-10 h-10 object-contain">
+                <span class="font-bold text-lg tracking-tight">TRACKER</span>
+            </div>
+            
+            <nav class="flex-1 px-4 space-y-2 mt-4">
+                <a href="#" onclick="showSection('dashboard')" id="nav-dashboard" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-50 transition">
+                    <i class="fa-solid fa-chart-simple"></i> Dashboard
+                </a>
+                <a href="#" onclick="showSection('cuentas')" id="nav-cuentas" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-50 transition">
+                    <i class="fa-solid fa-wallet"></i> Cuentas
+                </a>
+            </nav>
+
+            <div class="p-4 border-t">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-gray-300 overflow-hidden">
+                        <img src="avatar.jpg" alt="User" class="w-full h-full object-cover">
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold">Papito084</p>
+                        <p class="text-xs text-gray-500">Administrador</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto p-8">
+            <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900" id="page-title">Dashboard</h1>
+                    <p class="text-gray-500 text-sm">Resumen de tu rendimiento profesional</p>
+                </div>
+                <div class="flex flex-wrap gap-3 items-center">
+                    <div class="flex items-center gap-2 bg-white border rounded-lg px-3 py-2 shadow-sm" id="dashboard-date-picker">
+                        <i class="fa-regular fa-calendar text-gray-400 text-sm"></i>
+                        <input type="date" id="filter-start" class="text-xs font-medium text-gray-600 outline-none border-none bg-transparent">
+                        <span class="text-gray-400 text-xs">-</span>
+                        <input type="date" id="filter-end" class="text-xs font-medium text-gray-600 outline-none border-none bg-transparent">
+                    </div>
+
+                    <button onclick="openAccountModal()" class="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700 shadow-lg shadow-purple-200 transition">
+                        <i class="fa-solid fa-plus mr-1"></i> Nueva Cuenta
+                    </button>
+                </div>
+            </header>
+
+            <div id="section-dashboard" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-xl card-shadow border-l-4 border-blue-500 flex flex-col justify-between h-full">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 bg-blue-50 text-blue-600 rounded-lg"><i class="fa-solid fa-chart-column"></i></div>
+                                <p class="text-sm font-medium text-gray-500">Evaluaciones</p>
+                            </div>
+                            <span class="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded" id="evals-active">0 en progreso</span>
+                        </div>
+                        <h3 class="text-3xl font-bold text-gray-800 mt-2" id="total-evals">0</h3>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-xl card-shadow border-l-4 border-green-500 flex flex-col justify-between h-full">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 bg-green-50 text-green-600 rounded-lg"><i class="fa-solid fa-trophy"></i></div>
+                                <p class="text-sm font-medium text-gray-500">Cuentas Live</p>
+                            </div>
+                            <span class="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded" id="live-active">0 activas</span>
+                        </div>
+                        <h3 class="text-3xl font-bold text-gray-800 mt-2" id="total-live">0</h3>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl card-shadow border-l-4 border-purple-500 flex flex-col justify-between h-full">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 bg-purple-50 text-purple-600 rounded-lg"><i class="fa-solid fa-bullseye"></i></div>
+                                <p class="text-sm font-medium text-gray-500">Funding Ratio</p>
+                            </div>
+                            <span class="text-xs font-semibold text-purple-600 bg-purple-50 px-2 py-1 rounded" id="total-retiros-count">Retiros: 0</span>
+                        </div>
+                        <h3 class="text-3xl font-bold text-gray-800 mt-2" id="funding-ratio">0%</h3>
+                        <p class="text-xs text-gray-400 mt-1" id="ratio-detail">(Passed vs Suspended)</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-xl card-shadow flex flex-col justify-between h-full">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 bg-red-50 text-red-500 rounded-lg"><i class="fa-solid fa-wallet"></i></div>
+                                <p class="text-sm font-medium text-gray-500">Gastos Totales</p>
+                            </div>
+                        </div>
+                        <h3 class="text-3xl font-bold text-gray-800 mt-2" id="total-expenses">0,00 €</h3>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl card-shadow flex flex-col justify-between h-full">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 bg-green-50 text-green-600 rounded-lg"><i class="fa-solid fa-sack-dollar"></i></div>
+                                <p class="text-sm font-medium text-gray-500">Ganancias</p>
+                            </div>
+                            <span class="text-xs font-semibold text-green-500 bg-green-50 px-2 py-1 rounded" id="avg-winnings">Prom: 0€</span>
+                        </div>
+                        <h3 class="text-3xl font-bold text-gray-800 mt-2" id="total-winnings">0,00 €</h3>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl card-shadow flex flex-col justify-between h-full">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 bg-green-100 text-green-700 rounded-lg"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                                <p class="text-sm font-medium text-gray-500">Beneficio Neto</p>
+                            </div>
+                            <span class="text-xs font-semibold text-green-500 bg-green-50 px-2 py-1 rounded" id="roi-percent">ROI: 0%</span>
+                        </div>
+                        <h3 class="text-3xl font-bold text-gray-800 mt-2" id="net-profit">0,00 €</h3>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl card-shadow">
+                    <h3 class="text-lg font-semibold mb-1">Evolución del Capital (P&L)</h3>
+                    <p class="text-sm text-gray-500 mb-4" id="chart-subtitle">Mostrando datos del periodo seleccionado</p>
+                    <div class="h-64 w-full">
+                        <canvas id="capitalChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-xl card-shadow">
+                        <h3 class="text-lg font-semibold mb-4 text-yellow-600"><i class="fa-solid fa-trophy mr-2"></i>Top Empresas (ROI)</h3>
+                        <div id="top-roi-list" class="space-y-4"></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl card-shadow">
+                        <h3 class="text-lg font-semibold mb-4 text-orange-600"><i class="fa-solid fa-money-bill-transfer mr-2"></i>Top Empresas (Retiros)</h3>
+                        <div id="top-withdrawals-list" class="space-y-4"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="section-cuentas" class="hidden space-y-6">
+                <div class="bg-white rounded-xl card-shadow p-4 flex flex-wrap gap-4 items-center justify-between">
+                    <div class="flex flex-wrap gap-4 items-center w-full md:w-auto">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-medium text-gray-500">TIPO:</span>
+                            <div class="flex bg-gray-100 rounded-lg p-1">
+                                <button class="filter-btn active px-3 py-1 text-sm rounded-md transition" data-filter-type="type" data-filter-value="all">Todas</button>
+                                <button class="filter-btn px-3 py-1 text-sm rounded-md transition" data-filter-type="type" data-filter-value="Evaluación">Evaluación</button>
+                                <button class="filter-btn px-3 py-1 text-sm rounded-md transition" data-filter-type="type" data-filter-value="Live">Live</button>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-medium text-gray-500">ESTADO:</span>
+                            <div class="flex bg-gray-100 rounded-lg p-1">
+                                <button class="filter-btn active px-3 py-1 text-sm rounded-md transition" data-filter-type="status" data-filter-value="all">Todos</button>
+                                <button class="filter-btn px-3 py-1 text-sm rounded-md transition" data-filter-type="status" data-filter-value="Activa">Activas</button>
+                                <button class="filter-btn px-3 py-1 text-sm rounded-md transition" data-filter-type="status" data-filter-value="Passed">Passed</button>
+                                <button class="filter-btn px-3 py-1 text-sm rounded-md transition" data-filter-type="status" data-filter-value="Suspendida">Suspendidas</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl card-shadow overflow-hidden">
+                    <div class="p-4 border-b bg-gray-50">
+                        <h3 class="font-bold text-gray-700">Gestión de Cuentas</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-gray-600">
+                            <thead class="bg-gray-50 text-xs uppercase font-medium">
+                                <tr>
+                                    <th class="px-6 py-3">Nombre</th>
+                                    <th class="px-6 py-3">Tipo</th>
+                                    <th class="px-6 py-3">Estado</th>
+                                    <th class="px-6 py-3">Empresa</th>
+                                    <th class="px-6 py-3 text-right text-red-500">Gastos</th>
+                                    <th class="px-6 py-3 text-right text-green-500">Ganancias</th>
+                                    <th class="px-6 py-3 text-right font-bold">P&L Neto</th>
+                                    <th class="px-6 py-3 text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="accounts-table-body" class="divide-y divide-gray-100"></tbody>
+                        </table>
+                    </div>
+                    <div id="empty-state" class="hidden p-8 text-center text-gray-400">
+                        <p>No se encontraron cuentas.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="modal-account" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 modal">
+        <div class="bg-white rounded-xl w-full max-w-md p-6 shadow-2xl relative">
+            <button onclick="closeModal('modal-account')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-times"></i></button>
+            <h3 class="text-xl font-bold mb-4" id="modal-account-title">Nueva Cuenta</h3>
+            
+            <form id="form-account" class="space-y-4">
+                <input type="hidden" id="acc-id"> 
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Empresa (Prop Firm)</label>
+                    <input type="text" id="acc-firm" placeholder="Ej: Topstep, Funding Pips" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 bg-gray-50" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">ID / Nombre Cuenta</label>
+                    <input type="text" id="acc-name" placeholder="Ej: #80921" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 bg-gray-50" required>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Tipo</label>
+                        <select id="acc-type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 bg-white">
+                            <option value="Evaluación">Evaluación</option>
+                            <option value="Live">Live</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Estado</label>
+                        <select id="acc-status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 bg-white">
+                            <option value="Activa">Activa</option>
+                            <option value="Passed">Passed</option>
+                            <option value="Suspendida">Suspendida</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="cost-field-group">
+                    <label class="block text-sm font-medium text-gray-700">Coste Inicial / Fee (€)</label>
+                    <input type="number" id="acc-cost" step="0.01" placeholder="0.00" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 bg-gray-50">
+                    <p class="text-xs text-gray-400 mt-1">*Solo rellena esto si es una cuenta nueva o quieres añadir un gasto inicial.</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Fecha de Creación</label>
+                    <input type="date" id="acc-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 bg-gray-50" required>
+                </div>
+                <div class="flex justify-end gap-3 mt-6 pt-4 border-t">
+                    <button type="button" onclick="closeModal('modal-account')" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 shadow-lg shadow-purple-200 transition font-medium">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-transaction" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 modal">
+        <div class="bg-white rounded-xl w-full max-w-md p-6 shadow-2xl">
+            <h3 class="text-xl font-bold mb-1" id="trans-title">Registrar Movimiento</h3>
+            <p class="text-sm text-gray-500 mb-4" id="trans-subtitle">Cuenta: ...</p>
+            <form id="form-transaction" class="space-y-4">
+                <input type="hidden" id="trans-acc-id">
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Operación</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="cursor-pointer">
+                                <input type="radio" name="transType" value="Retiro" class="peer sr-only" checked>
+                                <div class="p-3 text-center border rounded-lg peer-checked:bg-green-50 peer-checked:border-green-500 peer-checked:text-green-700 hover:bg-gray-50 transition">
+                                    <i class="fa-solid fa-arrow-up-from-bracket mb-1 block"></i>
+                                    <span class="text-sm font-medium">Retiro (Profit)</span>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="transType" value="Gasto" class="peer sr-only">
+                                <div class="p-3 text-center border rounded-lg peer-checked:bg-red-50 peer-checked:border-red-500 peer-checked:text-red-700 hover:bg-gray-50 transition">
+                                    <i class="fa-solid fa-receipt mb-1 block"></i>
+                                    <span class="text-sm font-medium">Gasto / Fee</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Monto (€)</label>
+                    <div class="relative mt-1">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">€</span>
+                        <input type="number" id="trans-amount" step="0.01" class="block w-full pl-8 rounded-md border-gray-300 shadow-sm border p-2 text-lg font-medium" required>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Fecha</label>
+                    <input type="date" id="trans-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2" required>
+                </div>
+                <div class="flex justify-end gap-3 mt-6 pt-4 border-t">
+                    <button type="button" onclick="closeModal('modal-transaction')" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 shadow-lg shadow-green-200 transition font-medium">Registrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA STATE ---
+        let accounts = JSON.parse(localStorage.getItem('tradingTrackerAccounts')) || [];
+        let transactions = JSON.parse(localStorage.getItem('tradingTrackerTransactions')) || [];
+
+        // --- INIT ---
+        const today = new Date();
+        const firstDayOfYear = new Date(today.getFullYear(), 0, 1);
+        const toInputDate = (d) => d.toISOString().split('T')[0];
+
+        document.getElementById('filter-start').value = toInputDate(firstDayOfYear);
+        document.getElementById('filter-end').value = toInputDate(today);
+
+        // Listeners
+        document.getElementById('filter-start').addEventListener('change', renderDashboard);
+        document.getElementById('filter-end').addEventListener('change', renderDashboard);
+
+        const saveData = () => {
+            localStorage.setItem('tradingTrackerAccounts', JSON.stringify(accounts));
+            localStorage.setItem('tradingTrackerTransactions', JSON.stringify(transactions));
+            renderAll();
+        };
+
+        // --- NAVIGATION & UI ---
+        function showSection(sectionId) {
+            document.querySelectorAll('[id^="section-"]').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(`section-${sectionId}`).classList.remove('hidden');
+            document.getElementById(`nav-${sectionId}`).classList.add('active');
+            
+            document.getElementById('dashboard-date-picker').style.display = sectionId === 'dashboard' ? 'flex' : 'none';
+            document.getElementById('page-title').innerText = sectionId === 'dashboard' ? 'Dashboard' : 'Cuentas';
+
+            if(sectionId === 'dashboard') renderDashboard();
+            if(sectionId === 'cuentas') applyFilters(); 
+        }
+
+        function openModal(id) { 
+            document.getElementById(id).classList.remove('hidden'); 
+            document.body.classList.add('modal-active');
+        }
+        function closeModal(id) { 
+            document.getElementById(id).classList.add('hidden'); 
+            document.body.classList.remove('modal-active');
+        }
+
+        // --- ACCOUNT MANAGEMENT (CREATE & EDIT) ---
+        function openAccountModal(isEdit = false, accId = null) {
+            const form = document.getElementById('form-account');
+            const title = document.getElementById('modal-account-title');
+            
+            if (isEdit && accId) {
+                const acc = accounts.find(a => a.id === accId);
+                title.innerText = "Editar Cuenta";
+                document.getElementById('acc-id').value = acc.id;
+                document.getElementById('acc-firm').value = acc.firm;
+                document.getElementById('acc-name').value = acc.name;
+                document.getElementById('acc-type').value = acc.type;
+                document.getElementById('acc-status').value = acc.status;
+                document.getElementById('acc-date').value = acc.createdAt;
+                
+                document.getElementById('acc-cost').value = ''; 
+                document.getElementById('cost-field-group').style.display = 'none'; 
+            } else {
+                title.innerText = "Nueva Cuenta";
+                form.reset();
+                document.getElementById('acc-id').value = '';
+                document.getElementById('acc-date').valueAsDate = new Date();
+                document.getElementById('cost-field-group').style.display = 'block';
+            }
+            openModal('modal-account');
+        }
+
+        document.getElementById('form-account').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const idInput = document.getElementById('acc-id').value;
+            const dateInput = document.getElementById('acc-date').value;
+            
+            if (idInput) {
+                // EDIT MODE
+                const accIndex = accounts.findIndex(a => a.id == idInput);
+                if (accIndex > -1) {
+                    accounts[accIndex].firm = document.getElementById('acc-firm').value;
+                    accounts[accIndex].name = document.getElementById('acc-name').value;
+                    accounts[accIndex].type = document.getElementById('acc-type').value;
+                    accounts[accIndex].status = document.getElementById('acc-status').value;
+                    accounts[accIndex].createdAt = dateInput;
+                }
+            } else {
+                // CREATE MODE
+                const newAccount = {
+                    id: Date.now(),
+                    firm: document.getElementById('acc-firm').value,
+                    name: document.getElementById('acc-name').value,
+                    type: document.getElementById('acc-type').value,
+                    status: document.getElementById('acc-status').value,
+                    createdAt: dateInput
+                };
+                accounts.push(newAccount);
+
+                const cost = parseFloat(document.getElementById('acc-cost').value);
+                if(cost > 0) {
+                    transactions.push({
+                        id: Date.now() + 1,
+                        accountId: newAccount.id,
+                        type: 'Gasto',
+                        amount: cost,
+                        date: dateInput
+                    });
+                }
+            }
+            saveData();
+            closeModal('modal-account');
+        });
+
+        // --- TRANSACTIONS ---
+        function openTransactionModal(accId, accName) {
+            document.getElementById('trans-acc-id').value = accId;
+            document.getElementById('trans-subtitle').innerText = `Cuenta: ${accName}`;
+            document.getElementById('form-transaction').reset();
+            document.querySelector('input[name="transType"][value="Retiro"]').checked = true;
+            document.getElementById('trans-date').valueAsDate = new Date();
+            openModal('modal-transaction');
+        }
+
+        document.getElementById('form-transaction').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const type = document.querySelector('input[name="transType"]:checked').value;
+            transactions.push({
+                id: Date.now(),
+                accountId: parseInt(document.getElementById('trans-acc-id').value),
+                type: type,
+                amount: parseFloat(document.getElementById('trans-amount').value),
+                date: document.getElementById('trans-date').value
+            });
+            saveData();
+            closeModal('modal-transaction');
+        });
+
+        function deleteAccount(id) {
+            if(confirm('¿Seguro que quieres borrar esta cuenta? Se perderá todo su historial.')) {
+                accounts = accounts.filter(a => a.id !== id);
+                transactions = transactions.filter(t => t.accountId !== id);
+                saveData();
+            }
+        }
+
+        // --- FILTERING ---
+        let currentTypeFilter = 'all';
+        let currentStatusFilter = 'all';
+
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const type = e.target.dataset.filterType;
+                const value = e.target.dataset.filterValue;
+                document.querySelectorAll(`.filter-btn[data-filter-type="${type}"]`).forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                if (type === 'type') currentTypeFilter = value;
+                if (type === 'status') currentStatusFilter = value;
+                applyFilters();
+            });
+        });
+
+        function applyFilters() {
+            let filtered = accounts;
+            if (currentTypeFilter !== 'all') filtered = filtered.filter(acc => acc.type === currentTypeFilter);
+            if (currentStatusFilter !== 'all') filtered = filtered.filter(acc => acc.status === currentStatusFilter);
+            renderAccountsTable(filtered);
+        }
+
+        // --- RENDERING ---
+        function renderAll() {
+            applyFilters();
+            renderDashboard();
+        }
+
+        function getAccountFinancials(accId) {
+            const accTrans = transactions.filter(t => t.accountId === accId);
+            const expenses = accTrans.filter(t => t.type === 'Gasto').reduce((sum, t) => sum + t.amount, 0);
+            const winnings = accTrans.filter(t => t.type === 'Retiro').reduce((sum, t) => sum + t.amount, 0);
+            return { expenses, winnings, profit: winnings - expenses };
+        }
+
+        function renderAccountsTable(list) {
+            const tbody = document.getElementById('accounts-table-body');
+            tbody.innerHTML = '';
+            
+            if(list.length === 0) {
+                document.getElementById('empty-state').classList.remove('hidden');
+                return;
+            }
+            document.getElementById('empty-state').classList.add('hidden');
+
+            list.forEach(acc => {
+                const fin = getAccountFinancials(acc.id);
+                
+                // Styles
+                const typeBadge = acc.type === 'Live' 
+                    ? '<span class="px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-800 border border-green-200">Live</span>' 
+                    : '<span class="px-2 py-1 rounded text-xs font-semibold bg-yellow-100 text-yellow-800 border border-yellow-200">Evaluación</span>';
+                
+                let statusBadgeClass = 'bg-gray-100 text-gray-800';
+                if(acc.status === 'Activa') statusBadgeClass = 'bg-blue-100 text-blue-800 border border-blue-200';
+                if(acc.status === 'Passed') statusBadgeClass = 'bg-purple-100 text-purple-800 border border-purple-200';
+                if(acc.status === 'Suspendida') statusBadgeClass = 'bg-red-100 text-red-800 border border-red-200';
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 transition border-b border-gray-100 last:border-0";
+                tr.innerHTML = `
+                    <td class="px-6 py-4 font-medium text-gray-900">${acc.name}</td>
+                    <td class="px-6 py-4">${typeBadge}</td>
+                    <td class="px-6 py-4"><span class="px-2 py-1 rounded text-xs font-semibold ${statusBadgeClass}">${acc.status}</span></td>
+                    <td class="px-6 py-4 text-gray-500">${acc.firm}</td>
+                    <td class="px-6 py-4 text-right text-red-500 font-mono">-${fin.expenses.toFixed(2)}€</td>
+                    <td class="px-6 py-4 text-right text-green-500 font-mono">+${fin.winnings.toFixed(2)}€</td>
+                    <td class="px-6 py-4 text-right font-bold font-mono ${fin.profit >= 0 ? 'text-green-700' : 'text-red-600'}">${fin.profit.toFixed(2)}€</td>
+                    <td class="px-6 py-4 text-center">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick="openTransactionModal(${acc.id}, '${acc.name}')" title="Añadir Dinero/Gasto" class="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-full transition"><i class="fa-solid fa-circle-dollar-to-slot text-lg"></i></button>
+                            <button onclick="openAccountModal(true, ${acc.id})" title="Editar Cuenta" class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="deleteAccount(${acc.id})" title="Eliminar" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderDashboard() {
+            const startDate = document.getElementById('filter-start').value;
+            const endDate = document.getElementById('filter-end').value;
+            const isInDateRange = (dateStr) => dateStr && dateStr >= startDate && dateStr <= endDate;
+
+            const filteredTrans = transactions.filter(t => isInDateRange(t.date));
+            const accountsInRange = accounts.filter(a => isInDateRange(a.createdAt));
+
+            const evalsTotal = accountsInRange.filter(a => a.type === 'Evaluación').length;
+            const liveTotal = accountsInRange.filter(a => a.type === 'Live').length;
+            
+            const activeEvals = accounts.filter(a => a.type === 'Evaluación' && a.status === 'Activa').length;
+            const activeLive = accounts.filter(a => a.type === 'Live' && a.status === 'Activa').length;
+
+            document.getElementById('total-evals').innerText = evalsTotal;
+            document.getElementById('evals-active').innerText = `${activeEvals} en progreso`;
+            document.getElementById('total-live').innerText = liveTotal;
+            document.getElementById('live-active').innerText = `${activeLive} activas`;
+
+            // Money Logic
+            const expenses = filteredTrans.filter(t => t.type === 'Gasto').reduce((sum, t) => sum + t.amount, 0);
+            const winnings = filteredTrans.filter(t => t.type === 'Retiro').reduce((sum, t) => sum + t.amount, 0);
+            const net = winnings - expenses;
+            const withdrawalCount = filteredTrans.filter(t => t.type === 'Retiro').length;
+
+            // --- CORRECCIÓN MATEMÁTICA FUNDING RATIO ---
+            // Solo contamos Evaluaciones que ya tienen veredicto final
+            const evalsInRange = accountsInRange.filter(a => a.type === 'Evaluación');
+            const passedCount = evalsInRange.filter(a => a.status === 'Passed').length;
+            const suspendedCount = evalsInRange.filter(a => a.status === 'Suspendida').length;
+            
+            const totalDecided = passedCount + suspendedCount;
+            // Ratio = Passed / (Passed + Suspended)
+            const ratio = totalDecided > 0 ? (passedCount / totalDecided) * 100 : 0;
+
+            document.getElementById('total-expenses').innerText = formatCurrency(expenses);
+            document.getElementById('total-winnings').innerText = formatCurrency(winnings);
+            document.getElementById('net-profit').innerText = formatCurrency(net);
+            document.getElementById('net-profit').className = `text-3xl font-bold ${net >= 0 ? 'text-gray-800' : 'text-red-600'}`;
+            
+            const roi = expenses > 0 ? (net / expenses) * 100 : 0;
+            document.getElementById('roi-percent').innerText = `ROI: ${roi.toFixed(1)}%`;
+            
+            document.getElementById('total-retiros-count').innerText = `Retiros: ${withdrawalCount}`;
+            document.getElementById('funding-ratio').innerText = `${ratio.toFixed(1)}%`;
+
+            renderTopFirms(filteredTrans);
+            renderChart(filteredTrans);
+        }
+
+        function renderTopFirms(filteredTrans) {
+            const firms = {};
+            filteredTrans.forEach(t => {
+                const acc = accounts.find(a => a.id === t.accountId);
+                if (!acc) return; 
+                if(!firms[acc.firm]) firms[acc.firm] = { expenses: 0, winnings: 0, withdrawals: 0 };
+                
+                if (t.type === 'Gasto') firms[acc.firm].expenses += t.amount;
+                else if (t.type === 'Retiro') {
+                    firms[acc.firm].winnings += t.amount;
+                    firms[acc.firm].withdrawals += 1;
+                }
+            });
+
+            const firmArray = Object.keys(firms).map(key => ({
+                name: key,
+                roi: firms[key].expenses > 0 ? ((firms[key].winnings - firms[key].expenses) / firms[key].expenses) * 100 : 0,
+                winnings: firms[key].winnings,
+                withdrawals: firms[key].withdrawals
+            }));
+
+            const injectList = (list, elementId, isRoi) => {
+                const el = document.getElementById(elementId);
+                if(list.length === 0) { el.innerHTML = '<p class="text-sm text-gray-400 italic">Sin datos</p>'; return; }
+                
+                el.innerHTML = list.map((f, i) => `
+                    <div class="flex justify-between items-center border-b border-gray-100 pb-2 last:border-0">
+                        <div class="flex items-center gap-3">
+                            <span class="font-bold text-gray-300 text-lg w-4">${i+1}</span>
+                            <span class="font-medium text-gray-700">${f.name}</span>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-bold ${isRoi ? 'text-green-600' : 'text-gray-800'}">${isRoi ? f.roi.toFixed(1) + '%' : formatCurrency(f.winnings)}</div>
+                            <div class="text-xs text-gray-400">${isRoi ? formatCurrency(f.winnings) : f.withdrawals + ' retiros'}</div>
+                        </div>
+                    </div>
+                `).join('');
+            };
+
+            injectList([...firmArray].sort((a,b) => b.roi - a.roi).slice(0, 3), 'top-roi-list', true);
+            injectList([...firmArray].sort((a,b) => b.winnings - a.winnings).slice(0, 3), 'top-withdrawals-list', false);
+        }
+
+        let myChart = null;
+        function renderChart(filteredTrans) {
+            const ctx = document.getElementById('capitalChart').getContext('2d');
+            const sortedTrans = [...filteredTrans].sort((a,b) => new Date(a.date) - new Date(b.date));
+            
+            const labels = [];
+            const dataPoints = [];
+            let currentCapital = 0; 
+            
+            sortedTrans.forEach(t => {
+                labels.push(t.date);
+                if (t.type === 'Retiro') currentCapital += t.amount;
+                else currentCapital -= t.amount;
+                dataPoints.push(currentCapital);
+            });
+
+            if(myChart) myChart.destroy();
+            
+            let gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(124, 58, 237, 0.4)');
+            gradient.addColorStop(1, 'rgba(124, 58, 237, 0.0)');
+
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels.length ? labels : ['Inicio'],
+                    datasets: [{
+                        label: 'Net P&L',
+                        data: dataPoints.length ? dataPoints : [0],
+                        borderColor: '#7c3aed',
+                        backgroundColor: gradient,
+                        borderWidth: 2,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#7c3aed',
+                        pointBorderWidth: 2,
+                        fill: true,
+                        tension: 0.35,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: { 
+                            callbacks: { label: (c) => formatCurrency(c.raw) },
+                            backgroundColor: '#1f2937',
+                            padding: 10,
+                            cornerRadius: 8
+                        }
+                    },
+                    scales: {
+                        x: { display: false },
+                        y: { 
+                            grid: { color: '#f3f4f6', borderDash: [5, 5] },
+                            ticks: { callback: (v) => v + '€', font: {size: 10} }
+                        }
+                    },
+                    interaction: { intersect: false, mode: 'index' }
+                }
+            });
+        }
+
+        function formatCurrency(num) {
+            return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(num);
+        }
+
+        showSection('dashboard');
+    </script>
+</body>
+</html>
